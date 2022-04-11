@@ -3,7 +3,7 @@
 # What is does
 The Youtube auto watchlater remover will automatically remove the video from your watchlater playlist.
 
-Every time you navigate the "Watch Later" playlist on Youtube and open a video in a seperate tab it will eject you from the "Watch Later playlist".
+Every time you navigate the "Watch Later" playlist on Youtube and open a video in a seperate tab it will 'eject' the video from the "Watch Later" playlist, for example: Lets say you saw something on your home page of Youtube, then saved it to you "Watch Later", when you go to the "Watch Later" playlist and click on the video and open it in the new tab, it will remove it from the playlist so you will only watch that video and not the others in the playlist.(This works with any playlist)
 
 There is an option to have it auto-remove the video from the playlist when you have opened this video in a new tab.(Picture of what the icon looks like)
 
