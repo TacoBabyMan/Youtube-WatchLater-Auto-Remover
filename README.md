@@ -23,6 +23,6 @@ Download a browser extension that allows you to run user made scripts.
 A popular example is Tamper Monkey
 https://www.google.com/search?q=tamper+monkey&oq=tamper+monkey&aqs=chrome..69i57j0i10l6j69i60.2803j0j4&sourceid=chrome&ie=UTF-8
 
-Next Download the script from this repository (or you can get the raw https://gist.github.com/TacoBabyMan/c538d50b9548cb569b330276ade02d98)and add it to Tamper Monkey.
+Next Download the script from this repository (or you can get the raw https://gist.github.com/TacoBabyMan/c538d50b9548cb569b330276ade02d98 ) and add it to Tamper Monkey.
 
 Boom Bam Bop, you're done !
