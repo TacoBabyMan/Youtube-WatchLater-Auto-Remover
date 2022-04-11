@@ -42,6 +42,9 @@
           addedSettings.addEventListener("click",()=>{
             watchLaterActive();
           });
+          document.addEventListener("keypress",function keycheck(e){
+            if(e.key=="e") watchLaterActive();
+          });
       }
       function removeIsActive(){
         if((cookieList.indexOf("removeWatchLater"))>0){
