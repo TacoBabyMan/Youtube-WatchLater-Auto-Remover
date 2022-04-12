@@ -43,7 +43,7 @@
             watchLaterActive();
           });
           document.addEventListener("keypress",function keycheck(e){
-            if(e.key=="e") watchLaterActive();
+            if(e.key=="e" && document.activeElement != document.querySelector('[name="search_query"]')) watchLaterActive();
           });
       }
       function removeIsActive(){
