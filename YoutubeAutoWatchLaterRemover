@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      3.5
+// @version      3.9
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -29,6 +29,9 @@
           tp-yt-iron-overlay-backdrop{
             display:none !important;
           }
+          .ytd-popup-container{
+            visibility:hidden;
+          }
         </style>
         `);
 
@@ -44,11 +47,12 @@
         function watchLaterActive(){
           cookieList=decodeURIComponent(document.cookie);
           if((cookieList.search('removeWatchLater=false'))>0){
-            document.cookie="removeWatchLater=true";
+            document.cookie="removeWatchLater=true";//turns on
             location.reload();
           }
           if((cookieList.search('removeWatchLater=true'))>0){
-            document.cookie="removeWatchLater=false";
+            document.cookie="removeWatchLater=false";//turn off
+            cookieList=decodeURIComponent(document.cookie);
             svgUnsetColour();
           }
           if((cookieList.search('removeWatchLater'))==-1){
@@ -56,33 +60,39 @@
             svgSetColour();
           }
         };
+        //May need to rewrite some day.
+        var hasRunActive = false;
+        function reEnablePopUp(){
+          setTimeout(()=>{
+            document.querySelectorAll('.ytd-popup-container')[1].style.visibility='visible';
+            document.querySelectorAll('.ytd-popup-container')[2].style.visibility='visible';
+          },1000);
+          hasRunActive = true;
+        }
         function removeIsActive(){
-          if((cookieList.indexOf("removeWatchLater"))>0){
+          setTimeout(()=>{
+            document.querySelector('[aria-label="Save to playlist"]').click();
             if(cookieList.search("removeWatchLater=true")>0){
-              function savePopUp(){
-                setTimeout(()=>{document.querySelector('ytd-popup-container').style.zIndex='9999';},1000);
-              }
-              svgSetColour();
-              setTimeout(()=>{
-                document.querySelector('[aria-label="Save to playlist"]').click();
-                document.querySelector('ytd-popup-container').style.zIndex='-999';
-              },1000);
               setTimeout(()=>{
                 if(document.querySelectorAll('[class*="checked"]')[0]!=null){
                   document.querySelector('#checkbox').click();
-                  document.querySelector('[aria-label="Save to playlist"]').click();
-                  savePopUp();
                 }
-                else{
-                  document.querySelector('[aria-label="Save to playlist"]').click();
-                  savePopUp();
-                }
-              },2000);
+              },500);
             }
+          },1000);
+          setTimeout(()=>{
+            document.querySelector('[aria-label="Save to playlist"]').click();
+            reEnablePopUp();
+          },2000);
+        };
+        function focusChecker(){
+          if(!hasRunActive){
+            removeIsActive();
           }
         }
-        if(document.hasFocus()) removeIsActive();
-        window.addEventListener('focus',()=>{removeIsActive()});
+        if(document.hasFocus()) focusChecker();
+        window.addEventListener('focus',()=>{focusChecker()});
+        // -------------------------------------------------------------------------------------------------------
         clearInterval(pageLoading);
       }
   },100);
