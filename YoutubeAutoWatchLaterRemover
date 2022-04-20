@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      3.9
+// @version      3.98
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -83,7 +83,7 @@
           setTimeout(()=>{
             document.querySelector('[aria-label="Save to playlist"]').click();
             reEnablePopUp();
-          },2000);
+          },1500);
         };
         function focusChecker(){
           if(!hasRunActive){
