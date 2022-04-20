@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      3.98
+// @version      7.5
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -19,6 +19,7 @@
         if(url.includes("&list=")){
           window.location.replace(url.slice(0,url.indexOf("&list=")));
         }
+
         document.getElementById('end').insertAdjacentHTML("afterbegin",`
         <svg width="24" height="17" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg" id="addedSettings" style="margin:20px;cursor:pointer">
           <rect x="0.5" y="0.5" width="23" height="16" stroke="white"/>
@@ -62,15 +63,18 @@
         };
         //May need to rewrite some day.
         var hasRunActive = false;
-        function reEnablePopUp(){
-          setTimeout(()=>{
-            document.querySelectorAll('.ytd-popup-container')[1].style.visibility='visible';
-            document.querySelectorAll('.ytd-popup-container')[2].style.visibility='visible';
-          },1000);
-          hasRunActive = true;
-        }
-        function removeIsActive(){
-          setTimeout(()=>{
+
+        let lastUrl = location.href;
+        new MutationObserver(() => {
+          const url = location.href;
+          if (url != lastUrl) {
+            lastUrl = url;
+            hasRunActive = false;
+            //removeIsActive();
+          }
+        }).observe(document, {subtree: true, childList: true});
+        function autoClicker(){
+          if(document.querySelector('[aria-label="Save to playlist"]')!=null){
             document.querySelector('[aria-label="Save to playlist"]').click();
             if(cookieList.search("removeWatchLater=true")>0){
               setTimeout(()=>{
@@ -79,11 +83,40 @@
                 }
               },500);
             }
-          },1000);
+            setTimeout(()=>{
+              document.querySelector('[aria-label="Save to playlist"]').click();
+              setTimeout(()=>{
+                document.querySelectorAll('.ytd-popup-container')[1].style.visibility='visible';
+                document.querySelectorAll('.ytd-popup-container')[2].style.visibility='visible';
+                document.querySelector('html').insertAdjacentHTML("afterbegin",`
+                  <style name="neo_css_injection">
+                    .ytd-popup-container{
+                      visibility:visible !important;
+                    }
+                  </style>
+                `);
+              },1500);
+            },500);
+            hasRunActive = true;
+          }else{
+            document.querySelector('html').insertAdjacentHTML("afterbegin",`
+              <style name="neo_css_injection">
+                .ytd-popup-container{
+                  visibility:visible !important;
+                }
+              </style>
+            `);
+          }
+        }
+        function removeIsActive(){
           setTimeout(()=>{
-            document.querySelector('[aria-label="Save to playlist"]').click();
-            reEnablePopUp();
-          },1500);
+            if(document.querySelector('[name="neo_css_injection"]')!=null){
+              document.querySelector('[name="neo_css_injection"]').remove();
+              setTimeout(autoClicker,500);
+            }else{
+              autoClicker();
+            }
+          },1000);
         };
         function focusChecker(){
           if(!hasRunActive){
@@ -91,6 +124,7 @@
           }
         }
         if(document.hasFocus()) focusChecker();
+        window.addEventListener('load',()=>{focusChecker()});
         window.addEventListener('focus',()=>{focusChecker()});
         // -------------------------------------------------------------------------------------------------------
         clearInterval(pageLoading);
