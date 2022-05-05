@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      10
+// @version      11
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -76,7 +76,11 @@
           if (url != lastUrl) {
             lastUrl = url;
             setTimeout(()=>{
-              location.reload();
+              if((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1){
+                location.reload();
+              }else{
+                svgSetColour();
+              }
             },500);
           }
         }).observe(document, {subtree: true, childList: true});
@@ -106,7 +110,7 @@
 
         //May need to rewrite some day... probably not, but maybe.
         function autoClicker(){
-          if(document.querySelector('[name="neo_css_injection"]')!=null){
+          if(document.querySelector('[name="neo_css_injection"]')!=null && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
             setTimeout(()=>{document.querySelector('[name="neo_css_injection"]').remove()},100);
           }
           const savetoplaylistclock = setInterval(()=>{
