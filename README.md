@@ -17,6 +17,8 @@ There is an option to have it auto-remove the video from the playlist when you h
   
   White - Plugin Is Enabled And Will Eject Every Video Opened In New Tab From "Watch Later" Or Other Playists.
   
+  Red - This means ejection has occured.
+  
   'e' on the keyboard will toggle this off and on.
 
 # How to install
