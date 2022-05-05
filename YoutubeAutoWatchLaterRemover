@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      11
+// @version      13
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -107,28 +107,38 @@
              `);
         }
         cssInjection();
-
+        
         //May need to rewrite some day... probably not, but maybe.
         function autoClicker(){
           if(document.querySelector('[name="neo_css_injection"]')!=null && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
-            setTimeout(()=>{document.querySelector('[name="neo_css_injection"]').remove()},100);
+            setTimeout(()=>{},0);
+            document.querySelector('[name="neo_css_injection"]').remove()
           }
           const savetoplaylistclock = setInterval(()=>{
             if(document.querySelector('[aria-label="Save to playlist"]')!=null){
               document.querySelector('[aria-label="Save to playlist"]').click();
-              setTimeout(()=>{
-                if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
-                  document.querySelector('#checkbox').click();
-                }
-                document.querySelector('[aria-label="Save to playlist"]').click();
-
-                setTimeout(()=>{
-                  cssInjection();
-                  svgHasRunColour();
-                },1500);
-              },1000);
-
               clearInterval(savetoplaylistclock);
+              const animationclock = setInterval(()=>{
+                if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') === null){
+                  const playlistclock = setInterval(()=>{
+                    if(document.querySelectorAll('#checkmark')[0] != undefined){
+                      if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
+                        document.querySelector('#checkbox').click();
+                      }
+                      document.querySelector('[aria-label="Save to playlist"]').click();
+                      const animationclockhidden = setInterval(()=>{
+                        if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') != null){
+                          cssInjection();
+                          svgHasRunColour();
+                          clearInterval(animationclockhidden);
+                        }
+                      },100)
+                      clearInterval(playlistclock);
+                    }
+                  },100);
+                  clearInterval(animationclock);
+                }
+              },100);
             }
           },100);
         }
