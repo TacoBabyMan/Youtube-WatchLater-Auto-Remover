@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      7.5
+// @version      10
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -12,8 +12,11 @@
   function mainscript(){
     const pageLoading = setInterval(()=>{
       if(document.getElementById('end')!=null){
+        clearInterval(pageLoading);
         let cookieList=decodeURIComponent(document.cookie);
         let url = window.location.href;
+        let autoRemoveAllowed = false;
+        const svgHasRunColour=()=>{document.getElementById("addedSettings").style.filter="invert(63%) sepia(98%) saturate(437%) hue-rotate(308deg) brightness(97%) contrast(120%)"};
         const svgSetColour=()=>{document.getElementById("addedSettings").style.filter="invert(32%) sepia(16%) saturate(4998%) hue-rotate(193deg) brightness(103%) contrast(105%)"};
         const svgUnsetColour=()=>{document.getElementById("addedSettings").style.filter=""};
         if(url.includes("&list=")){
@@ -28,7 +31,7 @@
         </svg>
         <style>
           tp-yt-iron-overlay-backdrop{
-            display:none !important;
+            display:none;
           }
           .ytd-popup-container{
             visibility:hidden;
@@ -37,12 +40,15 @@
         `);
 
         if((cookieList.search('removeWatchLater=true'))>0){
+          autoRemoveAllowed=true;
           svgSetColour();
+        }else{
+          autoRemoveAllowed=false;
         }
         function settingJSInserter(){
           document.getElementById("addedSettings").addEventListener("click",()=>{watchLaterActive()});
           document.addEventListener("keypress",function keycheck(e){
-            if(e.key=="e" && document.activeElement != document.querySelector('[name="search_query"]')) watchLaterActive();
+            if(e.key=="e" && document.activeElement == document.querySelector('body')) watchLaterActive();
           });
         }settingJSInserter();
         function watchLaterActive(){
@@ -61,73 +67,71 @@
             svgSetColour();
           }
         };
-        //May need to rewrite some day.
+        //---------------------------------------------------------------------------------------
         var hasRunActive = false;
-
+        var readyChecker;
         let lastUrl = location.href;
         new MutationObserver(() => {
           const url = location.href;
           if (url != lastUrl) {
             lastUrl = url;
-            hasRunActive = false;
-            //removeIsActive();
+            setTimeout(()=>{
+              location.reload();
+            },500);
           }
         }).observe(document, {subtree: true, childList: true});
+
+        function focusChecker(){
+          if(!hasRunActive && document.hasFocus() && document.readyState=='complete'){
+            if(autoRemoveAllowed) autoClicker();
+            hasRunActive = true;
+            clearInterval(readyChecker);
+            console.log('hasRun');
+          }
+        }
+
+        function cssInjection(){
+          document.querySelector('html').insertAdjacentHTML("afterbegin",`
+             <style name="neo_css_injection">
+               tp-yt-iron-overlay-backdrop{
+                 display:block !important;
+               }
+               .ytd-popup-container{
+                 visibility:visible !important;
+               }
+             </style>
+             `);
+        }
+        cssInjection();
+
+        //May need to rewrite some day... probably not, but maybe.
         function autoClicker(){
-          if(document.querySelector('[aria-label="Save to playlist"]')!=null){
-            document.querySelector('[aria-label="Save to playlist"]').click();
-            if(cookieList.search("removeWatchLater=true")>0){
-              setTimeout(()=>{
-                if(document.querySelectorAll('[class*="checked"]')[0]!=null){
-                  document.querySelector('#checkbox').click();
-                }
-              },500);
-            }
-            setTimeout(()=>{
+          if(document.querySelector('[name="neo_css_injection"]')!=null){
+            setTimeout(()=>{document.querySelector('[name="neo_css_injection"]').remove()},100);
+          }
+          const savetoplaylistclock = setInterval(()=>{
+            if(document.querySelector('[aria-label="Save to playlist"]')!=null){
               document.querySelector('[aria-label="Save to playlist"]').click();
               setTimeout(()=>{
-                document.querySelectorAll('.ytd-popup-container')[1].style.visibility='visible';
-                document.querySelectorAll('.ytd-popup-container')[2].style.visibility='visible';
-                document.querySelector('html').insertAdjacentHTML("afterbegin",`
-                  <style name="neo_css_injection">
-                    .ytd-popup-container{
-                      visibility:visible !important;
-                    }
-                  </style>
-                `);
-              },1500);
-            },500);
-            hasRunActive = true;
-          }else{
-            document.querySelector('html').insertAdjacentHTML("afterbegin",`
-              <style name="neo_css_injection">
-                .ytd-popup-container{
-                  visibility:visible !important;
+                if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
+                  document.querySelector('#checkbox').click();
                 }
-              </style>
-            `);
-          }
-        }
-        function removeIsActive(){
-          setTimeout(()=>{
-            if(document.querySelector('[name="neo_css_injection"]')!=null){
-              document.querySelector('[name="neo_css_injection"]').remove();
-              setTimeout(autoClicker,500);
-            }else{
-              autoClicker();
+                document.querySelector('[aria-label="Save to playlist"]').click();
+
+                setTimeout(()=>{
+                  cssInjection();
+                  svgHasRunColour();
+                },1500);
+              },1000);
+
+              clearInterval(savetoplaylistclock);
             }
-          },1000);
-        };
-        function focusChecker(){
-          if(!hasRunActive){
-            removeIsActive();
-          }
+          },100);
         }
-        if(document.hasFocus()) focusChecker();
-        window.addEventListener('load',()=>{focusChecker()});
-        window.addEventListener('focus',()=>{focusChecker()});
         // -------------------------------------------------------------------------------------------------------
-        clearInterval(pageLoading);
+
+        readyChecker = setInterval(focusChecker,100);
+        window.addEventListener('focus',()=>{focusChecker()});
       }
   },100);
 }
