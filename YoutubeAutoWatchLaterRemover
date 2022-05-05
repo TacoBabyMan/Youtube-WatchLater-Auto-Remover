@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject
 // @namespace    bing bong
-// @version      13
+// @version      13.5
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -29,12 +29,24 @@
           <rect x="5" y="4" width="14" height="3" fill="white"/>
           <rect x="5" y="10" width="14" height="3" fill="white"/>
         </svg>
+        <clickBlock>
+        <clickBlock>
         <style>
           tp-yt-iron-overlay-backdrop{
             display:none;
           }
           .ytd-popup-container{
             visibility:hidden;
+          }
+          clickBlock{
+            display:block;
+            position:absolute;
+            background-color:transparent;
+            top:0px;
+            left:0px;
+            width:100vw;
+            height:100vh;
+            z-index:9999;
           }
         </style>
         `);
@@ -103,11 +115,14 @@
                .ytd-popup-container{
                  visibility:visible !important;
                }
+               clickBlock{
+                 display:none !important;
+               }
              </style>
              `);
         }
         cssInjection();
-        
+
         //May need to rewrite some day... probably not, but maybe.
         function autoClicker(){
           if(document.querySelector('[name="neo_css_injection"]')!=null && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
