@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      16
+// @version      16.4
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -133,6 +133,9 @@
         }
 
         function autoClicker(){
+          let timeoutError = false;
+          let buttonNotAllowed;
+
           if(document.querySelector('[name="neo_css_injection"]')!=null){
             document.querySelector('[name="neo_css_injection"]').remove()
           }
@@ -143,6 +146,20 @@
               clearInterval(savetoplaylistclock);
               const animationclock = setInterval(()=>{
                 if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') === null){
+                  // if(!timeoutError){
+                  //   buttonNotAllowed = setTimeout(()=>{
+                  //     if(document.querySelector('[name="neo_css_injection"]')==null){
+                  //       cssInjection();
+                  //
+                  //     }
+                  //     svgHasRunColour();
+                  //     console.log('timeoutResolution');
+                  //   },2000);
+                  //   timeoutError = true;
+                  //   console.log('timeoutError');
+                  // }
+                  // clearTimeout(buttonNotAllowed);
+
                   const playlistclock = setInterval(()=>{
                     if(document.querySelectorAll('#checkmark')[0] != undefined){
                       if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
@@ -161,6 +178,12 @@
                         }
                       },100)
                       clearInterval(playlistclock);
+                    }else if(!timeoutError){
+                      if(document.querySelector('[name="neo_css_injection"]')==null){
+                        cssInjection();
+                      }
+                      svgHasRunColour();
+                      timeoutError = true;
                     }
                   },100);
                   clearInterval(animationclock);
