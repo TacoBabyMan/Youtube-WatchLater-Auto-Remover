@@ -86,15 +86,9 @@
         new MutationObserver(() => {
           const url = location.href;
           if (url != lastUrl) {
-            lastUrl = url;
-            setTimeout(()=>{
-              if((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1){
-                location.reload();
-              }else{
-                svgSetColour();
-              }
-            },500);
+            injectionCheck(lastUrl,url);
           }
+          lastUrl = url;
         }).observe(document, {subtree: true, childList: true});
 
         function focusChecker(){
@@ -105,7 +99,17 @@
             console.log('hasRun');
           }
         }
-
+        function injectionCheck(lastUrl,url){
+          if((lastUrl.length==24) && (url.length!=24)){
+            if(document.querySelector('[name="neo_css_injection"]')!=null){
+              document.querySelector('[name="neo_css_injection"]').remove()
+              hasRunActive = false;
+              readyChecker = setInterval(focusChecker,100);
+            }
+          }else{
+            svgSetColour();
+          }
+        }
         function cssInjection(){
           document.querySelector('html').insertAdjacentHTML("afterbegin",`
              <style name="neo_css_injection">
@@ -122,11 +126,9 @@
              `);
         }
         cssInjection();
-
         //May need to rewrite some day... probably not, but maybe.
         function autoClicker(){
           if(document.querySelector('[name="neo_css_injection"]')!=null && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
-            setTimeout(()=>{},0);
             document.querySelector('[name="neo_css_injection"]').remove()
           }
           const savetoplaylistclock = setInterval(()=>{
