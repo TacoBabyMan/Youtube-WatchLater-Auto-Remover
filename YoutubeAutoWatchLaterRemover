@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Playlist user eject
+// @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      13.5
+// @version      16
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -10,6 +10,7 @@
 
 (
   function mainscript(){
+    console.log('scripts loaded')
     const pageLoading = setInterval(()=>{
       if(document.getElementById('end')!=null){
         clearInterval(pageLoading);
@@ -22,7 +23,21 @@
         if(url.includes("&list=")){
           window.location.replace(url.slice(0,url.indexOf("&list=")));
         }
-
+        function cssInjection(){
+          document.querySelector('html').insertAdjacentHTML("afterbegin",`
+             <style name="neo_css_injection">
+               tp-yt-iron-overlay-backdrop{
+                 display:block !important;
+               }
+               .ytd-popup-container{
+                 visibility:visible !important;
+               }
+               clickBlock{
+                 display:none !important;
+               }
+             </style>
+             `);
+        }
         document.getElementById('end').insertAdjacentHTML("afterbegin",`
         <svg width="24" height="17" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg" id="addedSettings" style="margin:20px;cursor:pointer">
           <rect x="0.5" y="0.5" width="23" height="16" stroke="white"/>
@@ -86,54 +101,45 @@
         new MutationObserver(() => {
           const url = location.href;
           if (url != lastUrl) {
-            injectionCheck(lastUrl,url);
+            svgSetColour();
+            const injectionReCheck = setInterval(()=>{
+              if(document.querySelector('[name="neo_css_injection"]')!=null){
+                document.querySelector('[name="neo_css_injection"]').remove();
+              }
+              hasRunActive = false;
+              readyChecker = setInterval(focusChecker,100);
+              clearInterval(injectionReCheck);
+            },100);
           }
           lastUrl = url;
         }).observe(document, {subtree: true, childList: true});
 
         function focusChecker(){
           if(!hasRunActive && document.hasFocus() && document.readyState=='complete'){
-            if(autoRemoveAllowed) autoClicker();
-            hasRunActive = true;
-            clearInterval(readyChecker);
+            if(autoRemoveAllowed && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
+              if(document.querySelector('video').readyState==4){
+                autoClicker();
+                clearInterval(readyChecker);
+                hasRunActive = true;
+              }
+            }else{
+              cssInjection();
+              clearInterval(readyChecker);
+              hasRunActive = true;
+              console.log('focus injection')
+            }
             console.log('hasRun');
           }
         }
-        function injectionCheck(lastUrl,url){
-          if((lastUrl.length==24) && (url.length!=24)){
-            if(document.querySelector('[name="neo_css_injection"]')!=null){
-              document.querySelector('[name="neo_css_injection"]').remove()
-              hasRunActive = false;
-              readyChecker = setInterval(focusChecker,100);
-            }
-          }else{
-            svgSetColour();
-          }
-        }
-        function cssInjection(){
-          document.querySelector('html').insertAdjacentHTML("afterbegin",`
-             <style name="neo_css_injection">
-               tp-yt-iron-overlay-backdrop{
-                 display:block !important;
-               }
-               .ytd-popup-container{
-                 visibility:visible !important;
-               }
-               clickBlock{
-                 display:none !important;
-               }
-             </style>
-             `);
-        }
-        cssInjection();
-        //May need to rewrite some day... probably not, but maybe.
+
         function autoClicker(){
-          if(document.querySelector('[name="neo_css_injection"]')!=null && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
+          if(document.querySelector('[name="neo_css_injection"]')!=null){
             document.querySelector('[name="neo_css_injection"]').remove()
           }
           const savetoplaylistclock = setInterval(()=>{
             if(document.querySelector('[aria-label="Save to playlist"]')!=null){
               document.querySelector('[aria-label="Save to playlist"]').click();
+
               clearInterval(savetoplaylistclock);
               const animationclock = setInterval(()=>{
                 if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') === null){
@@ -143,9 +149,13 @@
                         document.querySelector('#checkbox').click();
                       }
                       document.querySelector('[aria-label="Save to playlist"]').click();
+
                       const animationclockhidden = setInterval(()=>{
                         if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') != null){
-                          cssInjection();
+                          if(document.querySelector('[name="neo_css_injection"]')==null){
+                            cssInjection();
+
+                          }
                           svgHasRunColour();
                           clearInterval(animationclockhidden);
                         }
