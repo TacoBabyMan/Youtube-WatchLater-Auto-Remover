@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      16.4
+// @version      16.6
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -133,9 +133,6 @@
         }
 
         function autoClicker(){
-          let timeoutError = false;
-          let buttonNotAllowed;
-
           if(document.querySelector('[name="neo_css_injection"]')!=null){
             document.querySelector('[name="neo_css_injection"]').remove()
           }
@@ -145,20 +142,13 @@
 
               clearInterval(savetoplaylistclock);
               const animationclock = setInterval(()=>{
-                if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') === null){
-                  // if(!timeoutError){
-                  //   buttonNotAllowed = setTimeout(()=>{
-                  //     if(document.querySelector('[name="neo_css_injection"]')==null){
-                  //       cssInjection();
-                  //
-                  //     }
-                  //     svgHasRunColour();
-                  //     console.log('timeoutResolution');
-                  //   },2000);
-                  //   timeoutError = true;
-                  //   console.log('timeoutError');
-                  // }
-                  // clearTimeout(buttonNotAllowed);
+                if(document.querySelector('[class="style-scope yt-notification-action-renderer"] > yt-formatted-string')!=null){
+                  if(document.querySelector('[name="neo_css_injection"]')==null){
+                    cssInjection();
+                  }
+                  svgHasRunColour();
+                  clearInterval(animationclock)
+                }else if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') === null){
 
                   const playlistclock = setInterval(()=>{
                     if(document.querySelectorAll('#checkmark')[0] != undefined){
@@ -171,19 +161,12 @@
                         if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') != null){
                           if(document.querySelector('[name="neo_css_injection"]')==null){
                             cssInjection();
-
                           }
                           svgHasRunColour();
                           clearInterval(animationclockhidden);
                         }
                       },100)
                       clearInterval(playlistclock);
-                    }else if(!timeoutError){
-                      if(document.querySelector('[name="neo_css_injection"]')==null){
-                        cssInjection();
-                      }
-                      svgHasRunColour();
-                      timeoutError = true;
                     }
                   },100);
                   clearInterval(animationclock);
