@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      16.6
+// @version      20
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -10,7 +10,6 @@
 
 (
   function mainscript(){
-    console.log('scripts loaded')
     const pageLoading = setInterval(()=>{
       if(document.getElementById('end')!=null){
         clearInterval(pageLoading);
@@ -44,24 +43,14 @@
           <rect x="5" y="4" width="14" height="3" fill="white"/>
           <rect x="5" y="10" width="14" height="3" fill="white"/>
         </svg>
-        <clickBlock>
-        <clickBlock>
+        <clickBlock style="display:block;position:absolute;top:0px;left:0px;width:100vw;height:100vh;z-index:9999;background-color:transparent;">
+        </clickBlock>
         <style>
           tp-yt-iron-overlay-backdrop{
             display:none;
           }
           .ytd-popup-container{
             visibility:hidden;
-          }
-          clickBlock{
-            display:block;
-            position:absolute;
-            background-color:transparent;
-            top:0px;
-            left:0px;
-            width:100vw;
-            height:100vh;
-            z-index:9999;
           }
         </style>
         `);
@@ -91,7 +80,7 @@
           }
           if((cookieList.search('removeWatchLater'))==-1){
             document.cookie="removeWatchLater=true";
-            svgSetColour();
+            location.reload();
           }
         };
         //---------------------------------------------------------------------------------------
@@ -106,79 +95,115 @@
               if(document.querySelector('[name="neo_css_injection"]')!=null){
                 document.querySelector('[name="neo_css_injection"]').remove();
               }
-              hasRunActive = false;
-              readyChecker = setInterval(focusChecker,100);
-              clearInterval(injectionReCheck);
+              if(document.querySelector('clickBlock').style.display=='block'){
+                console.log('redirection')
+                hasRunActive = false;
+                focusChecker()
+                clearInterval(injectionReCheck);
+              }
             },100);
           }
           lastUrl = url;
         }).observe(document, {subtree: true, childList: true});
 
         function focusChecker(){
+          console.log('focusRun')
           if(!hasRunActive && document.hasFocus() && document.readyState=='complete'){
             if(autoRemoveAllowed && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
               if(document.querySelector('video').readyState==4){
                 autoClicker();
-                clearInterval(readyChecker);
                 hasRunActive = true;
+                clearInterval(readyChecker);
+                console.log('hasRun');
+              }else{
+                setTimeout(()=>{focusChecker();},100);
               }
             }else{
               cssInjection();
-              clearInterval(readyChecker);
               hasRunActive = true;
               console.log('focus injection')
+              console.log('hasRun');
+              clearInterval(readyChecker);
             }
-            console.log('hasRun');
+          }else{
+            setTimeout(()=>{focusChecker();},100);
           }
         }
+        focusChecker();
 
         function autoClicker(){
           if(document.querySelector('[name="neo_css_injection"]')!=null){
-            document.querySelector('[name="neo_css_injection"]').remove()
+            document.querySelector('[name="neo_css_injection"]').remove();
           }
-          const savetoplaylistclock = setInterval(()=>{
+          function loadingClick(){
             if(document.querySelector('[aria-label="Save to playlist"]')!=null){
               document.querySelector('[aria-label="Save to playlist"]').click();
-
-              clearInterval(savetoplaylistclock);
-              const animationclock = setInterval(()=>{
-                if(document.querySelector('[class="style-scope yt-notification-action-renderer"] > yt-formatted-string')!=null){
-                  if(document.querySelector('[name="neo_css_injection"]')==null){
-                    cssInjection();
-                  }
-                  svgHasRunColour();
-                  clearInterval(animationclock)
-                }else if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') === null){
-
-                  const playlistclock = setInterval(()=>{
-                    if(document.querySelectorAll('#checkmark')[0] != undefined){
-                      if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
-                        document.querySelector('#checkbox').click();
-                      }
-                      document.querySelector('[aria-label="Save to playlist"]').click();
-
-                      const animationclockhidden = setInterval(()=>{
-                        if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') != null){
-                          if(document.querySelector('[name="neo_css_injection"]')==null){
-                            cssInjection();
-                          }
-                          svgHasRunColour();
-                          clearInterval(animationclockhidden);
-                        }
-                      },100)
-                      clearInterval(playlistclock);
-                    }
-                  },100);
-                  clearInterval(animationclock);
+            }else{
+              setTimeout(()=>{loadingClick()},100);
+            }
+          }
+          function popupComplete(){
+            if(document.querySelectorAll('[class="style-scope yt-notification-action-renderer"] > yt-formatted-string').length == 1){
+              if(document.querySelector('[name="neo_css_injection"]')==null){
+                cssInjection();
+              }
+              svgHasRunColour();
+              return 'notAllowed';
+            }else if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') == null){
+              return 'isAllowed';
+            }else{
+              setTimeout(()=>{popupComplete()},100);
+            }
+          }
+          function popupClosed(popOutcome){
+            if(popOutcome == 'isAllowed'){
+              const local = setInterval(()=>{
+                if(document.querySelector('ytd-add-to-playlist-renderer > div[class="style-scope ytd-add-to-playlist-renderer scrollable"]') != null){
+                  console.log('waiting on click')
+                  document.querySelector('[aria-label="Save to playlist"]').click();
+                  clearInterval(local);
                 }
               },100);
             }
-          },100);
-        }
-        // -------------------------------------------------------------------------------------------------------
+          }
+          function applyEjection(){
+            if((document.querySelectorAll('#checkmark')[0] != undefined) && (document.querySelector('ytd-add-to-playlist-renderer > div[class="style-scope ytd-add-to-playlist-renderer scrollable"]') == null)){
+              console.log('we got here')
+              if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
+                document.querySelector('#checkbox').click();
+              }
+            }else{
+              setTimeout(()=>{
+                applyEjection();
+              },100);
+            }
+          }
 
-        readyChecker = setInterval(focusChecker,100);
-        window.addEventListener('focus',()=>{focusChecker()});
+          async function setupCaller(){
+            console.log('setupCaller');
+            await loadingClick();
+            console.log('loadingClick')
+            var popOutcome = await popupComplete();
+            console.log('popupComplete')
+            await popupClosed(popOutcome);
+            console.log('popupClosed')
+            await applyEjection();
+            console.log('applyEjection')
+            setTimeout(()=>{
+              const local = setInterval(()=>{
+                if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') != null){
+                  cssInjection();
+                  svgHasRunColour();
+                  clearInterval(local);
+                }else{
+                  document.querySelector('[aria-label="Save to playlist"]').click();
+                }
+              },100);
+            },1000);
+          }
+          setupCaller();
+        }
+
       }
   },100);
 }
