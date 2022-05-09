@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      20
+// @version      20.1
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -119,11 +119,13 @@
                 setTimeout(()=>{focusChecker();},100);
               }
             }else{
-              cssInjection();
-              hasRunActive = true;
-              console.log('focus injection')
-              console.log('hasRun');
-              clearInterval(readyChecker);
+              setTimeout(()=>{
+                cssInjection();
+                hasRunActive = true;
+                console.log('focus injection')
+                console.log('hasRun');
+                clearInterval(readyChecker);
+              },1000);
             }
           }else{
             setTimeout(()=>{focusChecker();},100);
