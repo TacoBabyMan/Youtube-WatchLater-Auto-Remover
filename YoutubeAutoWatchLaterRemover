@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      20.1
+// @version      20.2
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -15,7 +15,7 @@
         clearInterval(pageLoading);
         let cookieList=decodeURIComponent(document.cookie);
         let url = window.location.href;
-        let autoRemoveAllowed = false;
+        let autoRemoveAllowed = true;
         const svgHasRunColour=()=>{document.getElementById("addedSettings").style.filter="invert(63%) sepia(98%) saturate(437%) hue-rotate(308deg) brightness(97%) contrast(120%)"};
         const svgSetColour=()=>{document.getElementById("addedSettings").style.filter="invert(32%) sepia(16%) saturate(4998%) hue-rotate(193deg) brightness(103%) contrast(105%)"};
         const svgUnsetColour=()=>{document.getElementById("addedSettings").style.filter=""};
@@ -199,6 +199,11 @@
                   clearInterval(local);
                 }else{
                   document.querySelector('[aria-label="Save to playlist"]').click();
+                }
+                if(document.querySelectorAll('ytd-add-to-playlist-renderer')[0]==undefined){
+                      cssInjection();
+                      svgHasRunColour();
+                      clearInterval(local);
                 }
               },100);
             },1000);
