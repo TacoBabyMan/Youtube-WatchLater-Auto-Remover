@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Playlist user eject and automatic watchlater remover
 // @namespace    bing bong
-// @version      20.2
+// @version      1
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
 // @grant        none
+// @require     /home/neosahadeo/Desktop/Projects/Programming/Plugins/playlistFixer.js
 // ==/UserScript==
 
 (
@@ -15,7 +16,7 @@
         clearInterval(pageLoading);
         let cookieList=decodeURIComponent(document.cookie);
         let url = window.location.href;
-        let autoRemoveAllowed = true;
+        let autoRemoveAllowed = false;
         const svgHasRunColour=()=>{document.getElementById("addedSettings").style.filter="invert(63%) sepia(98%) saturate(437%) hue-rotate(308deg) brightness(97%) contrast(120%)"};
         const svgSetColour=()=>{document.getElementById("addedSettings").style.filter="invert(32%) sepia(16%) saturate(4998%) hue-rotate(193deg) brightness(103%) contrast(105%)"};
         const svgUnsetColour=()=>{document.getElementById("addedSettings").style.filter=""};
@@ -26,40 +27,33 @@
           document.querySelector('html').insertAdjacentHTML("afterbegin",`
              <style name="neo_css_injection">
                tp-yt-iron-overlay-backdrop{
-                 display:block !important;
-               }
-               .ytd-popup-container{
-                 visibility:visible !important;
-               }
-               clickBlock{
                  display:none !important;
                }
              </style>
              `);
-        }
+        }cssInjection();
+        function hidePlaylist(){
+          document.querySelector('html').insertAdjacentHTML("afterbegin",`
+             <style name="playlistHide">
+               tp-yt-paper-dialog{
+                 display:none !important;
+               }
+             </style>
+             `);
+        }hidePlaylist();
         document.getElementById('end').insertAdjacentHTML("afterbegin",`
         <svg width="24" height="17" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg" id="addedSettings" style="margin:20px;cursor:pointer">
           <rect x="0.5" y="0.5" width="23" height="16" stroke="white"/>
           <rect x="5" y="4" width="14" height="3" fill="white"/>
           <rect x="5" y="10" width="14" height="3" fill="white"/>
         </svg>
-        <clickBlock style="display:block;position:absolute;top:0px;left:0px;width:100vw;height:100vh;z-index:9999;background-color:transparent;">
-        </clickBlock>
-        <style>
-          tp-yt-iron-overlay-backdrop{
-            display:none;
-          }
-          .ytd-popup-container{
-            visibility:hidden;
-          }
-        </style>
         `);
 
         if((cookieList.search('removeWatchLater=true'))>0){
           autoRemoveAllowed=true;
           svgSetColour();
         }else{
-          autoRemoveAllowed=false;
+          autoRemoveAllowed=true;
         }
         function settingJSInserter(){
           document.getElementById("addedSettings").addEventListener("click",()=>{watchLaterActive()});
@@ -84,8 +78,6 @@
           }
         };
         //---------------------------------------------------------------------------------------
-        var hasRunActive = false;
-        var readyChecker;
         let lastUrl = location.href;
         new MutationObserver(() => {
           const url = location.href;
@@ -94,124 +86,61 @@
             const injectionReCheck = setInterval(()=>{
               if(document.querySelector('[name="neo_css_injection"]')!=null){
                 document.querySelector('[name="neo_css_injection"]').remove();
-              }
-              if(document.querySelector('clickBlock').style.display=='block'){
-                console.log('redirection')
-                hasRunActive = false;
-                focusChecker()
-                clearInterval(injectionReCheck);
+              }else{
+                cssInjection();
               }
             },100);
           }
           lastUrl = url;
         }).observe(document, {subtree: true, childList: true});
 
-        function focusChecker(){
-          console.log('focusRun')
-          if(!hasRunActive && document.hasFocus() && document.readyState=='complete'){
-            if(autoRemoveAllowed && ((location.href.search('com/watch') || location.href.search('com/shorts'))!=-1)){
-              if(document.querySelector('video').readyState==4){
-                autoClicker();
-                hasRunActive = true;
-                clearInterval(readyChecker);
-                console.log('hasRun');
-              }else{
-                setTimeout(()=>{focusChecker();},100);
+        function playlistloadicontree(){
+          return new Promise(resolve =>{
+            let playlistIconLoad = setInterval(()=>{
+              if(document.querySelector('[aria-label="Save to playlist"]')!=null){
+                clearInterval(playlistIconLoad);
+                resolve()
               }
-            }else{
-              setTimeout(()=>{
-                cssInjection();
-                hasRunActive = true;
-                console.log('focus injection')
-                console.log('hasRun');
-                clearInterval(readyChecker);
-              },1000);
-            }
-          }else{
-            setTimeout(()=>{focusChecker();},100);
-          }
+            },100);
+          });
         }
-        focusChecker();
-
-        function autoClicker(){
-          if(document.querySelector('[name="neo_css_injection"]')!=null){
-            document.querySelector('[name="neo_css_injection"]').remove();
-          }
-          function loadingClick(){
-            if(document.querySelector('[aria-label="Save to playlist"]')!=null){
-              document.querySelector('[aria-label="Save to playlist"]').click();
-            }else{
-              setTimeout(()=>{loadingClick()},100);
+        function click(){
+          return new Promise(resolve =>{
+            if(document.querySelector('[name="playlistHide"]')==null){
+              hidePlaylist();
             }
-          }
-          function popupComplete(){
-            if(document.querySelectorAll('[class="style-scope yt-notification-action-renderer"] > yt-formatted-string').length == 1){
-              if(document.querySelector('[name="neo_css_injection"]')==null){
-                cssInjection();
+            if(document.querySelector('[name="neo_css_injection"]')==null){
+              cssInjection();
+            }
+            document.querySelector('[aria-label="Save to playlist"]').click()
+            let playlistLoad = setInterval(()=>{
+              if((document.querySelector('tp-yt-paper-dialog')!=null) && ((document.querySelector('[name="playlistHide"]')!=null)) && (document.querySelector('[name="neo_css_injection"]')!=null)){
+                clearInterval(playlistLoad);
+                resolve();
               }
+            },100);
+          });
+        };
+        function watchLaterButton(){
+          let x = (((document.querySelector('[aria-label="Watch later Private"]').parentNode).parentNode).parentNode).parentNode;
+          if(!x.children[0].children[0].children[0].classList.contains('hidden')){
+            x.children[0].click();
+          }
+          document.querySelector('[aria-label="Save to playlist"]').click();
+          setTimeout(()=>{
+            if(document.querySelector('[name="playlistHide"]')!=null){
+              document.querySelector('[name="playlistHide"]').remove();
+              document.querySelector('[name="neo_css_injection"]').remove();
               svgHasRunColour();
-              return 'notAllowed';
-            }else if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') == null){
-              return 'isAllowed';
-            }else{
-              setTimeout(()=>{popupComplete()},100);
             }
-          }
-          function popupClosed(popOutcome){
-            if(popOutcome == 'isAllowed'){
-              const local = setInterval(()=>{
-                if(document.querySelector('ytd-add-to-playlist-renderer > div[class="style-scope ytd-add-to-playlist-renderer scrollable"]') != null){
-                  console.log('waiting on click')
-                  document.querySelector('[aria-label="Save to playlist"]').click();
-                  clearInterval(local);
-                }
-              },100);
-            }
-          }
-          function applyEjection(){
-            if((document.querySelectorAll('#checkmark')[0] != undefined) && (document.querySelector('ytd-add-to-playlist-renderer > div[class="style-scope ytd-add-to-playlist-renderer scrollable"]') == null)){
-              console.log('we got here')
-              if(!document.querySelectorAll('#checkmark')[0].classList.contains('hidden')){
-                document.querySelector('#checkbox').click();
-              }
-            }else{
-              setTimeout(()=>{
-                applyEjection();
-              },100);
-            }
-          }
-
-          async function setupCaller(){
-            console.log('setupCaller');
-            await loadingClick();
-            console.log('loadingClick')
-            var popOutcome = await popupComplete();
-            console.log('popupComplete')
-            await popupClosed(popOutcome);
-            console.log('popupClosed')
-            await applyEjection();
-            console.log('applyEjection')
-            setTimeout(()=>{
-              const local = setInterval(()=>{
-                if(document.querySelector('tp-yt-paper-dialog[aria-hidden="true"]') != null){
-                  cssInjection();
-                  svgHasRunColour();
-                  clearInterval(local);
-                }else{
-                  document.querySelector('[aria-label="Save to playlist"]').click();
-                }
-                if(document.querySelectorAll('ytd-add-to-playlist-renderer')[0]==undefined){
-                      cssInjection();
-                      svgHasRunColour();
-                      clearInterval(local);
-                }
-              },100);
-            },1000);
-          }
-          setupCaller();
+          },1000);
         }
-
-      }
-  },100);
+        async function mainThread(){
+          await playlistloadicontree();
+          await click();
+          await watchLaterButton();
+        }mainThread();
+  };
+},100);
 }
 )();
