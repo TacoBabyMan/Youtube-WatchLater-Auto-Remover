@@ -6,7 +6,6 @@
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
 // @grant        none
-// @require     /home/neosahadeo/Desktop/Projects/Programming/Plugins/playlistFixer.js
 // ==/UserScript==
 
 (
