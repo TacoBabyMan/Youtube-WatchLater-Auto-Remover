@@ -77,21 +77,7 @@
           }
         };
         //---------------------------------------------------------------------------------------
-        let lastUrl = location.href;
-        new MutationObserver(() => {
-          const url = location.href;
-          if (url != lastUrl) {
-            svgSetColour();
-            const injectionReCheck = setInterval(()=>{
-              if(document.querySelector('[name="neo_css_injection"]')!=null){
-                document.querySelector('[name="neo_css_injection"]').remove();
-              }else{
-                cssInjection();
-              }
-            },100);
-          }
-          lastUrl = url;
-        }).observe(document, {subtree: true, childList: true});
+ 
 
         function playlistloadicontree(){
           return new Promise(resolve =>{
