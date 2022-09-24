@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Playlist user eject and automatic watchlater remover
+// @name         Auto Ejector
 // @namespace    bing bong
-// @version      1
+// @version      100
 // @description  Auto Eject of user from playlist
 // @author       Neo Sahadeo
 // @match        https://www.youtube.com/*
@@ -29,13 +29,20 @@
                  display:none !important;
                }
              </style>
+             <clickBlock style="display:block;position:absolute;top:0px;left:0px;width:100%;height:100vh;z-index:9999;background-color:transparent;">
+             </clickBlock>
              `);
-        }cssInjection();
+        };cssInjection();
         function hidePlaylist(){
           document.querySelector('html').insertAdjacentHTML("afterbegin",`
              <style name="playlistHide">
                tp-yt-paper-dialog{
                  display:none !important;
+                 z-index: -9999;
+               }
+               tp-yt-iron-overlay-backdrop{
+                 z-index: -9999 !important;
+                 transition: opacity 0s !important;
                }
              </style>
              `);
@@ -46,13 +53,21 @@
           <rect x="5" y="4" width="14" height="3" fill="white"/>
           <rect x="5" y="10" width="14" height="3" fill="white"/>
         </svg>
+        <style name="neos_overwrites">
+          [class="ytp-chrome-bottom"] > *{
+            z-index: 10000 !important;
+          }
+          [id="actions-inner"] > *{
+            z-index: 10000 !important;
+          }
+        </style>
         `);
 
         if((cookieList.search('removeWatchLater=true'))>0){
           autoRemoveAllowed=true;
           svgSetColour();
         }else{
-          autoRemoveAllowed=true;
+          autoRemoveAllowed=false;
         }
         function settingJSInserter(){
           document.getElementById("addedSettings").addEventListener("click",()=>{watchLaterActive()});
@@ -77,7 +92,28 @@
           }
         };
         //---------------------------------------------------------------------------------------
- 
+        let lastUrl = location.href;
+        let fromSender = false;
+        new MutationObserver(() => {
+          const url = location.href;
+          if (url != lastUrl) {
+            svgSetColour();
+            fromSender = true;
+            mainThread();
+          }
+          lastUrl = url;
+        }).observe(document, {subtree: true, childList: true});
+
+        function eventsCheck(){
+          return new Promise(resolve=>{
+            if(url.includes("watch")){
+              resolve(true);
+              console.log('truth')
+            }else{
+              resolve(false);
+            }
+          });
+        }
 
         function playlistloadicontree(){
           return new Promise(resolve =>{
@@ -107,23 +143,49 @@
           });
         };
         function watchLaterButton(){
-          let x = (((document.querySelector('[aria-label="Watch later Private"]').parentNode).parentNode).parentNode).parentNode;
-          if(!x.children[0].children[0].children[0].classList.contains('hidden')){
-            x.children[0].click();
-          }
-          document.querySelector('[aria-label="Save to playlist"]').click();
-          setTimeout(()=>{
+          return new Promise(resolve =>{
+            let x = (((document.querySelector('[aria-label="Watch later Private"]').parentNode).parentNode).parentNode).parentNode;
+            if(!x.children[0].children[0].children[0].classList.contains('hidden')){
+              x.children[0].click();
+            }
+            document.querySelector('[aria-label="Save to playlist"]').click();
+            let playlistHidden = setInterval(()=>{
+              if(document.querySelector('tp-yt-paper-dialog').style.display == 'none'){
+                clearInterval(playlistHidden);
+                setTimeout(()=>{
+                  document.querySelector('[name="playlistHide"]').remove();
+                  document.querySelector('[name="neo_css_injection"]').remove();
+                },1000);
+                document.querySelector('clickBlock').remove();
+                svgHasRunColour();
+                resolve();
+              }
+            },100);
+          });
+        }
+        function reset(){
+          return new Promise(resolve =>{
             if(document.querySelector('[name="playlistHide"]')!=null){
               document.querySelector('[name="playlistHide"]').remove();
-              document.querySelector('[name="neo_css_injection"]').remove();
-              svgHasRunColour();
             }
-          },1000);
+            if(document.querySelector('[name="neo_css_injection"]')!=null){
+              document.querySelector('[name="neo_css_injection"]').remove();
+            }
+            if(document.querySelector('clickBlock')!=null){
+              document.querySelector('clickBlock').remove();
+            }
+            resolve();
+          });
         }
         async function mainThread(){
-          await playlistloadicontree();
-          await click();
-          await watchLaterButton();
+          if(await eventsCheck() || fromSender){
+            await playlistloadicontree();
+            await click();
+            await watchLaterButton();
+            fromSender = false;
+          }else{
+            await reset();
+          }
         }mainThread();
   };
 },100);
